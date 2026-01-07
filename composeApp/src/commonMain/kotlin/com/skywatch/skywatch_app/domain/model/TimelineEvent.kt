@@ -3,8 +3,7 @@ package com.skywatch.skywatch_app.domain.model
 import kotlinx.datetime.Instant
 import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalTime::class)
-data class TimelineEvent (
+data class TimelineEvent @OptIn(ExperimentalTime::class) constructor(
     val id: String,
     val description: String,
     val timestamp: Instant?,

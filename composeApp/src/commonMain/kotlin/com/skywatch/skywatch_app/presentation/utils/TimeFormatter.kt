@@ -14,13 +14,15 @@ fun formatTimestamp(timestamp: Instant): String {
     val hour = localDateTime.hour
     val minute = localDateTime.minute
     
+    // Determine AM/PM before converting hour to 12-hour format
+    val amPm = if (hour < 12) "AM" else "PM"
+    
     val hour12 = when {
-        hour == 0 -> 12
-        hour > 12 -> hour - 12
-        else -> hour
+        hour == 0 -> 12      // Midnight (0) -> 12
+        hour > 12 -> hour - 12  // Afternoon (13-23) -> 1-11
+        else -> hour         // Morning (1-12) -> 1-12
     }
     
-    val amPm = if (hour < 12) "AM" else "PM"
     val minuteStr = minute.toString().padStart(2, '0')
     
     return "$hour12:$minuteStr $amPm"
