@@ -1,15 +1,40 @@
 package com.skywatch.skywatch_app.di
 
-import com.skywatch.skywatch_app.data.repository.SkyWatchRepositoryImpl
-import com.skywatch.skywatch_app.domain.repository.SkyWatchRepository
+import com.skywatch.skywatch_app.data.repository.MediaRepositoryImpl
+import com.skywatch.skywatch_app.data.repository.TimelineRepositoryImpl
+import com.skywatch.skywatch_app.data.repository.VideoFeedRepositoryImpl
+import com.skywatch.skywatch_app.domain.repository.MediaRepository
+import com.skywatch.skywatch_app.domain.repository.TimelineRepository
+import com.skywatch.skywatch_app.domain.repository.VideoFeedRepository
 import com.skywatch.skywatch_app.presentation.viewmodel.HomeViewModel
+import com.skywatch.skywatch_app.presentation.viewmodel.SettingsViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val appModule = module {
-    singleOf(::SkyWatchRepositoryImpl) bind SkyWatchRepository::class
+    single<CoroutineDispatcher>(qualifier = named("MainDispatcher")) {
+        Dispatchers.Main
+    }
+    
+    factory<CoroutineScope> {
+        val dispatcher: CoroutineDispatcher = get(named("MainDispatcher"))
+        CoroutineScope(SupervisorJob() + dispatcher)
+    }
+    
+    // Repositories
+    singleOf(::TimelineRepositoryImpl) bind TimelineRepository::class
+    singleOf(::MediaRepositoryImpl) bind MediaRepository::class
+    singleOf(::VideoFeedRepositoryImpl) bind VideoFeedRepository::class
+    
+    // ViewModels
     factoryOf(::HomeViewModel)
+    factoryOf(::SettingsViewModel)
 }
 
