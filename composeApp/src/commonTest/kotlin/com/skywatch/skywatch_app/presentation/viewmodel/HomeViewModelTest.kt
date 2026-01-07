@@ -2,9 +2,13 @@ package com.skywatch.skywatch_app.presentation.viewmodel
 
 import com.skywatch.skywatch_app.domain.model.EventType
 import com.skywatch.skywatch_app.domain.model.TimelineEvent
-import com.skywatch.skywatch_app.domain.repository.SkyWatchRepository
+import com.skywatch.skywatch_app.domain.repository.MediaRepository
+import com.skywatch.skywatch_app.domain.repository.TimelineRepository
+import com.skywatch.skywatch_app.domain.repository.VideoFeedRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -12,12 +16,14 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.Instant
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
@@ -36,8 +42,9 @@ class HomeViewModelTest {
 
     @Test
     fun initialState_hasDefaultValues() = runTest(testDispatcher) {
-        val mockRepository = createMockRepository()
-        val viewModel = HomeViewModel(mockRepository)
+        val (repos, scope) = createMockRepositories()
+        val (timelineRepo, videoFeedRepo, mediaRepo) = repos
+        val viewModel = HomeViewModel(timelineRepo, videoFeedRepo, mediaRepo, scope)
 
         advanceUntilIdle()
 
@@ -49,16 +56,19 @@ class HomeViewModelTest {
         assertEquals("Friday 12th December 2025", state.selectedDate)
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun observeRepository_updatesTimelineEvents() = runTest(testDispatcher) {
+        val testTimestamp = Instant.parse("2025-12-12T10:00:00Z")
         val mockEvents = listOf(
-            TimelineEvent("1", "Motion detected", "21:56 PM", EventType.MOTION),
-            TimelineEvent("2", "Package delivered", "10:03 AM", EventType.PACKAGE)
+            TimelineEvent("1", "Motion detected", testTimestamp, EventType.MOTION),
+            TimelineEvent("2", "Package delivered", testTimestamp, EventType.PACKAGE)
         )
-        val mockRepository = createMockRepository(
+        val (repos, scope) = createMockRepositories(
             timelineEvents = flowOf(mockEvents)
         )
-        val viewModel = HomeViewModel(mockRepository)
+        val (timelineRepo, videoFeedRepo, mediaRepo) = repos
+        val viewModel = HomeViewModel(timelineRepo, videoFeedRepo, mediaRepo, scope)
 
         advanceUntilIdle()
 
@@ -70,10 +80,11 @@ class HomeViewModelTest {
     @Test
     fun observeRepository_updatesSoundState() = runTest(testDispatcher) {
         val soundEnabledFlow = MutableStateFlow(false)
-        val mockRepository = createMockRepository(
+        val (repos, scope) = createMockRepositories(
             soundEnabled = soundEnabledFlow
         )
-        val viewModel = HomeViewModel(mockRepository)
+        val (timelineRepo, videoFeedRepo, mediaRepo) = repos
+        val viewModel = HomeViewModel(timelineRepo, videoFeedRepo, mediaRepo, scope)
 
         advanceUntilIdle()
         assertFalse(viewModel.uiState.value.isSoundOn)
@@ -86,10 +97,11 @@ class HomeViewModelTest {
     @Test
     fun observeRepository_updatesMuteState() = runTest(testDispatcher) {
         val mutedFlow = MutableStateFlow(true)
-        val mockRepository = createMockRepository(
+        val (repos, scope) = createMockRepositories(
             muted = mutedFlow
         )
-        val viewModel = HomeViewModel(mockRepository)
+        val (timelineRepo, videoFeedRepo, mediaRepo) = repos
+        val viewModel = HomeViewModel(timelineRepo, videoFeedRepo, mediaRepo, scope)
 
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value.isMuted)
@@ -104,21 +116,21 @@ class HomeViewModelTest {
         var toggleCalled = false
         var lastSoundValue: Boolean? = null
 
-        val mockRepository = object : SkyWatchRepository {
-            override fun getTimelineEvents() = flowOf<List<TimelineEvent>>(emptyList())
+        val videoFeedRepo = object : VideoFeedRepository {
+            override fun getVideoStream() = flowOf(ByteArray(0))
+            override suspend fun connectToWebhook(url: String) {}
+            override suspend fun disconnectFromWebhook() {}
             override suspend fun toggleSound(enabled: Boolean) {
                 toggleCalled = true
                 lastSoundValue = enabled
             }
             override suspend fun toggleMute(muted: Boolean) {}
-            override suspend fun takeScreenshot() {}
-            override suspend fun startRecording() {}
-            override suspend fun stopRecording() {}
             override fun getSoundEnabled() = MutableStateFlow(true)
             override fun getMuted() = MutableStateFlow(false)
         }
-
-        val viewModel = HomeViewModel(mockRepository)
+        val (repos, scope) = createMockRepositories()
+        val (timelineRepo, _, mediaRepo) = repos
+        val viewModel = HomeViewModel(timelineRepo, videoFeedRepo, mediaRepo, scope)
         advanceUntilIdle()
 
         viewModel.toggleSound()
@@ -133,21 +145,21 @@ class HomeViewModelTest {
         var toggleCalled = false
         var lastMuteValue: Boolean? = null
 
-        val mockRepository = object : SkyWatchRepository {
-            override fun getTimelineEvents() = flowOf<List<TimelineEvent>>(emptyList())
+        val videoFeedRepo = object : VideoFeedRepository {
+            override fun getVideoStream() = flowOf(ByteArray(0))
+            override suspend fun connectToWebhook(url: String) {}
+            override suspend fun disconnectFromWebhook() {}
             override suspend fun toggleSound(enabled: Boolean) {}
             override suspend fun toggleMute(muted: Boolean) {
                 toggleCalled = true
                 lastMuteValue = muted
             }
-            override suspend fun takeScreenshot() {}
-            override suspend fun startRecording() {}
-            override suspend fun stopRecording() {}
             override fun getSoundEnabled() = MutableStateFlow(true)
             override fun getMuted() = MutableStateFlow(false)
         }
-
-        val viewModel = HomeViewModel(mockRepository)
+        val (repos, scope) = createMockRepositories()
+        val (timelineRepo, _, mediaRepo) = repos
+        val viewModel = HomeViewModel(timelineRepo, videoFeedRepo, mediaRepo, scope)
         advanceUntilIdle()
 
         viewModel.toggleMute()
@@ -161,20 +173,16 @@ class HomeViewModelTest {
     fun startRecording_updatesState() = runTest(testDispatcher) {
         var recordingStarted = false
 
-        val mockRepository = object : SkyWatchRepository {
-            override fun getTimelineEvents() = flowOf<List<TimelineEvent>>(emptyList())
-            override suspend fun toggleSound(enabled: Boolean) {}
-            override suspend fun toggleMute(muted: Boolean) {}
+        val mediaRepo = object : MediaRepository {
             override suspend fun takeScreenshot() {}
             override suspend fun startRecording() {
                 recordingStarted = true
             }
             override suspend fun stopRecording() {}
-            override fun getSoundEnabled() = MutableStateFlow(true)
-            override fun getMuted() = MutableStateFlow(false)
         }
-
-        val viewModel = HomeViewModel(mockRepository)
+        val (repos, scope) = createMockRepositories()
+        val (timelineRepo, videoFeedRepo, _) = repos
+        val viewModel = HomeViewModel(timelineRepo, videoFeedRepo, mediaRepo, scope)
         advanceUntilIdle()
 
         assertFalse(viewModel.uiState.value.isRecording)
@@ -190,20 +198,16 @@ class HomeViewModelTest {
     fun stopRecording_updatesState() = runTest(testDispatcher) {
         var recordingStopped = false
 
-        val mockRepository = object : SkyWatchRepository {
-            override fun getTimelineEvents() = flowOf<List<TimelineEvent>>(emptyList())
-            override suspend fun toggleSound(enabled: Boolean) {}
-            override suspend fun toggleMute(muted: Boolean) {}
+        val mediaRepo = object : MediaRepository {
             override suspend fun takeScreenshot() {}
             override suspend fun startRecording() {}
             override suspend fun stopRecording() {
                 recordingStopped = true
             }
-            override fun getSoundEnabled() = MutableStateFlow(true)
-            override fun getMuted() = MutableStateFlow(false)
         }
-
-        val viewModel = HomeViewModel(mockRepository)
+        val (repos, scope) = createMockRepositories()
+        val (timelineRepo, videoFeedRepo, _) = repos
+        val viewModel = HomeViewModel(timelineRepo, videoFeedRepo, mediaRepo, scope)
         advanceUntilIdle()
 
         // Start recording first
@@ -221,8 +225,9 @@ class HomeViewModelTest {
 
     @Test
     fun selectDate_updatesState() = runTest(testDispatcher) {
-        val mockRepository = createMockRepository()
-        val viewModel = HomeViewModel(mockRepository)
+        val (repos, scope) = createMockRepositories()
+        val (timelineRepo, videoFeedRepo, mediaRepo) = repos
+        val viewModel = HomeViewModel(timelineRepo, videoFeedRepo, mediaRepo, scope)
         advanceUntilIdle()
 
         val newDate = "Saturday 13th December 2025"
@@ -231,21 +236,30 @@ class HomeViewModelTest {
         assertEquals(newDate, viewModel.uiState.value.selectedDate)
     }
 
-    private fun createMockRepository(
+    private fun createMockRepositories(
         timelineEvents: kotlinx.coroutines.flow.Flow<List<TimelineEvent>> = flowOf<List<TimelineEvent>>(emptyList()),
         soundEnabled: kotlinx.coroutines.flow.Flow<Boolean> = MutableStateFlow(true),
         muted: kotlinx.coroutines.flow.Flow<Boolean> = MutableStateFlow(false)
-    ): SkyWatchRepository {
-        return object : SkyWatchRepository {
+    ): Pair<Triple<TimelineRepository, VideoFeedRepository, MediaRepository>, CoroutineScope> {
+        val timelineRepo = object : TimelineRepository {
             override fun getTimelineEvents() = timelineEvents
+        }
+        val videoFeedRepo = object : VideoFeedRepository {
+            override fun getVideoStream() = flowOf(ByteArray(0))
+            override suspend fun connectToWebhook(url: String) {}
+            override suspend fun disconnectFromWebhook() {}
             override suspend fun toggleSound(enabled: Boolean) {}
             override suspend fun toggleMute(muted: Boolean) {}
-            override suspend fun takeScreenshot() {}
-            override suspend fun startRecording() {}
-            override suspend fun stopRecording() {}
             override fun getSoundEnabled() = soundEnabled
             override fun getMuted() = muted
         }
+        val mediaRepo = object : MediaRepository {
+            override suspend fun takeScreenshot() {}
+            override suspend fun startRecording() {}
+            override suspend fun stopRecording() {}
+        }
+        val scope = CoroutineScope(SupervisorJob() + testDispatcher)
+        return Pair(Triple(timelineRepo, videoFeedRepo, mediaRepo), scope)
     }
 }
 

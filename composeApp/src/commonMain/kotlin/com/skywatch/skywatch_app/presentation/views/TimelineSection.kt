@@ -10,10 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.skywatch.skywatch_app.domain.model.TimelineEvent
+import com.skywatch.skywatch_app.presentation.utils.formatTimestamp
+import kotlin.time.ExperimentalTime
 
 @Composable
 fun TimelineSection(events: List<TimelineEvent>) {
@@ -29,6 +30,7 @@ fun TimelineSection(events: List<TimelineEvent>) {
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun TimelineEventItem(
     event: TimelineEvent,
@@ -79,7 +81,7 @@ fun TimelineEventItem(
                 )
                 event.timestamp?.let { timestamp ->
                     Text(
-                        text = timestamp,
+                        text = formatTimestamp(timestamp),
                         fontSize = 12.sp,
                         color = TextGray,
                         modifier = Modifier.align(Alignment.CenterEnd)

@@ -6,14 +6,42 @@ import com.skywatch.skywatch_app.domain.repository.TimelineRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.datetime.Instant
+import kotlin.time.ExperimentalTime
 
 class TimelineRepositoryImpl : TimelineRepository {
+    @OptIn(ExperimentalTime::class)
     private val mockTimelineEvents = listOf(
-        TimelineEvent("1", "Motion detected", "21:56 PM", EventType.MOTION),
-        TimelineEvent("2", "Daveraj detected", "15:45 PM", EventType.PERSON_DETECTED),
-        TimelineEvent("3", "Potential threat", "13:37 PM", EventType.THREAT),
-        TimelineEvent("4", "Package delivered", "10:03 AM", EventType.PACKAGE),
-        TimelineEvent("5", "Ayaz detected", "08:17 AM", EventType.PERSON_DETECTED)
+        TimelineEvent(
+            id = "1",
+            description = "Motion detected",
+            timestamp = Instant.parse("2025-12-12T21:56:00Z"),
+            type = EventType.MOTION
+        ),
+        TimelineEvent(
+            id = "2",
+            description = "Daveraj detected",
+            timestamp = Instant.parse("2025-12-12T15:45:00Z"),
+            type = EventType.PERSON_DETECTED
+        ),
+        TimelineEvent(
+            id = "3",
+            description = "Potential threat",
+            timestamp = Instant.parse("2025-12-12T13:37:00Z"),
+            type = EventType.THREAT
+        ),
+        TimelineEvent(
+            id = "4",
+            description = "Package delivered",
+            timestamp = Instant.parse("2025-12-12T10:03:00Z"),
+            type = EventType.PACKAGE
+        ),
+        TimelineEvent(
+            id = "5",
+            description = "Ayaz detected",
+            timestamp = Instant.parse("2025-12-12T08:17:00Z"),
+            type = EventType.PERSON_DETECTED
+        )
     )
     
     override fun getTimelineEvents(): Flow<List<TimelineEvent>> {

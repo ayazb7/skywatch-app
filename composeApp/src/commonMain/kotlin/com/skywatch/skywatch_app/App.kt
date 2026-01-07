@@ -50,7 +50,7 @@ fun App() {
                     entry<Settings> {
                         SettingsScreen(
                             onNavigateBack = {
-                                backStack.removeLast()
+                                backStack.remove(Settings)
                             }
                         )
                     }
