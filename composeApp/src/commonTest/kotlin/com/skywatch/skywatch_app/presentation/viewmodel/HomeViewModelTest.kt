@@ -5,6 +5,7 @@ import com.skywatch.skywatch_app.domain.model.TimelineEvent
 import com.skywatch.skywatch_app.domain.repository.MediaRepository
 import com.skywatch.skywatch_app.domain.repository.TimelineRepository
 import com.skywatch.skywatch_app.domain.repository.VideoFeedRepository
+import com.skywatch.skywatch_app.viewmodel.HomeViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

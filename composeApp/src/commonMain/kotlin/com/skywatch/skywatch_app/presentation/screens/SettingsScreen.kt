@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.skywatch.skywatch_app.di.koinInject
-import com.skywatch.skywatch_app.presentation.viewmodel.SettingsViewModel
+import com.skywatch.skywatch_app.viewmodel.SettingsViewModel
 import com.skywatch.skywatch_app.presentation.views.*
 
 @Composable

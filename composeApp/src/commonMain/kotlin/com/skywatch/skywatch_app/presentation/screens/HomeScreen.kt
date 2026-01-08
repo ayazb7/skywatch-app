@@ -13,7 +13,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.skywatch.skywatch_app.di.koinInject
 import com.skywatch.skywatch_app.presentation.buttons.ControlButtonsRow
-import com.skywatch.skywatch_app.presentation.viewmodel.HomeViewModel
+import com.skywatch.skywatch_app.viewmodel.HomeViewModel
 import com.skywatch.skywatch_app.presentation.views.*
 
 @Composable

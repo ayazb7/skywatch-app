@@ -1,4 +1,4 @@
-package com.skywatch.skywatch_app.presentation.viewmodel
+package com.skywatch.skywatch_app.viewmodel
 
 import com.skywatch.skywatch_app.domain.model.TimelineEvent
 import com.skywatch.skywatch_app.domain.repository.MediaRepository

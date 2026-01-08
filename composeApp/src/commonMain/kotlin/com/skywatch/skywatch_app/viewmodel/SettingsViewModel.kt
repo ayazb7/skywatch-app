@@ -1,4 +1,4 @@
-package com.skywatch.skywatch_app.presentation.viewmodel
+package com.skywatch.skywatch_app.viewmodel
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel

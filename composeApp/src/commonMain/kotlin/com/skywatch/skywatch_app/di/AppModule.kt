@@ -6,8 +6,8 @@ import com.skywatch.skywatch_app.data.repository.VideoFeedRepositoryImpl
 import com.skywatch.skywatch_app.domain.repository.MediaRepository
 import com.skywatch.skywatch_app.domain.repository.TimelineRepository
 import com.skywatch.skywatch_app.domain.repository.VideoFeedRepository
-import com.skywatch.skywatch_app.presentation.viewmodel.HomeViewModel
-import com.skywatch.skywatch_app.presentation.viewmodel.SettingsViewModel
+import com.skywatch.skywatch_app.viewmodel.HomeViewModel
+import com.skywatch.skywatch_app.viewmodel.SettingsViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
