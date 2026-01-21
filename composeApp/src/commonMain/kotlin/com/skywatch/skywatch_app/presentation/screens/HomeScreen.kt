@@ -13,13 +13,20 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.skywatch.skywatch_app.di.koinInject
 import com.skywatch.skywatch_app.presentation.buttons.ControlButtonsRow
-import com.skywatch.skywatch_app.presentation.viewmodel.HomeViewModel
+import com.skywatch.skywatch_app.viewmodel.HomeViewModel
 import com.skywatch.skywatch_app.presentation.views.*
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = koinInject()
+    viewModel: HomeViewModel = koinInject(),
+    onNavigateToSettings: () -> Unit = {}
 ) {
+    DisposableEffect(viewModel) {
+        onDispose {
+            viewModel.close()
+        }
+    }
+    
     val uiState by viewModel.uiState.collectAsState()
     
     Box(
@@ -44,7 +51,9 @@ fun HomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Top Navigation Bar
-                TopNavigationBar()
+                TopNavigationBar(
+                    onSettingsClick = onNavigateToSettings
+                )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
