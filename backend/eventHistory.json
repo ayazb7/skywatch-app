@@ -1,0 +1,44 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "conversation": "Doorbell: *ding dong*\nDelivery Person: Hi! I have a package for the Johnson residence. It requires a signature. Are you available to sign?\nHomeowner: Yes, just one moment. Let me grab a pen.\nDelivery Person: No problem, take your time. It's a pretty heavy box, so I'll just set it down here on the porch.\nHomeowner: Thank you so much! Have a great day.\nDelivery Person: You too! Stay safe.",
+      "video_location": "/videos/2026-01-23/front_door_0815.mp4",
+      "screenshot_location": "/screenshots/2026-01-23/front_door_0815.jpg",
+      "summary": "Package delivery with signature",
+      "timestamp": "2026-01-23T08:15:32Z"
+    },
+    {
+      "id": 2,
+      "conversation": "Visitor: Hello? Is anyone home?\n*doorbell rings*\nVisitor: Hi there! I'm your new neighbor from across the street. Just wanted to introduce myself. I'm Sarah.\nHomeowner: Oh hi Sarah! Welcome to the neighborhood! I'm Mike. Nice to meet you.\nSarah: Thanks! I was wondering if you knew what day trash pickup is?\nHomeowner: It's every Tuesday and Friday morning. They usually come around 7 AM.\nSarah: Perfect, thank you so much! I'll let you get back to your day.\nHomeowner: No problem! Feel free to stop by anytime.",
+      "video_location": "/videos/2026-01-23/front_door_1130.mp4",
+      "screenshot_location": "/screenshots/2026-01-23/front_door_1130.jpg",
+      "summary": "New neighbor introduction",
+      "timestamp": "2026-01-23T11:30:45Z"
+    },
+    {
+      "id": 3,
+      "conversation": "Mail Carrier: Good afternoon! I have a certified letter that needs a signature.\nHomeowner: Sure, what's it regarding?\nMail Carrier: It's from the county clerk's office. I just need you to sign here on line 23.\nHomeowner: Okay, got it. Here you go.\nMail Carrier: Perfect. You'll receive a confirmation number via email within 24 hours. Is there anything else I can help you with today?\nHomeowner: No, that's all. Thank you!\nMail Carrier: You're welcome. Have a wonderful afternoon!",
+      "video_location": "/videos/2026-01-22/front_door_1415.mp4",
+      "screenshot_location": "/screenshots/2026-01-22/front_door_1415.jpg",
+      "summary": "Certified mail delivery",
+      "timestamp": "2026-01-22T14:15:22Z"
+    },
+    {
+      "id": 4,
+      "conversation": "Teenager 1: Dude, hurry up! The bus is gonna be here any minute.\nTeenager 2: I'm coming! I just had to grab my science project from the garage.\nTeenager 1: Did you finish the math homework? I totally forgot about it.\nTeenager 2: Yeah, you can copy mine on the bus. But you owe me lunch.\nTeenager 1: Deal. Oh wait, I think I hear it coming.\nTeenager 2: Finally! I thought we were gonna have to walk today.\n*bus arrives*\nBoth: See you later!",
+      "video_location": "/videos/2026-01-22/driveway_0730.mp4",
+      "screenshot_location": "/screenshots/2026-01-22/driveway_0730.jpg",
+      "summary": "Kids waiting for school bus",
+      "timestamp": "2026-01-22T07:30:12Z"
+    },
+    {
+      "id": 5,
+      "conversation": "Solicitor: *knocks on door* Hello! I'm with Green Energy Solutions. We're offering free home energy audits in your neighborhood this week.\n*waits 10 seconds*\nSolicitor: Is anyone home? We can help you save up to 30% on your electricity bills.\n*waits another 15 seconds*\nSolicitor: Alright, I'll just leave this brochure here. You can call us if you're interested. Have a great day!\n*places flyer in door and leaves*",
+      "video_location": "/videos/2026-01-21/front_door_1545.mp4",
+      "screenshot_location": "/screenshots/2026-01-21/front_door_1545.jpg",
+      "summary": "Solicitor left information",
+      "timestamp": "2026-01-21T15:45:33Z"
+    }
+  ]
+}
