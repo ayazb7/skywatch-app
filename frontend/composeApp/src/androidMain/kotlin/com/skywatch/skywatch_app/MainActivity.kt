@@ -12,7 +12,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        
+
+        // Initialize context provider for platform utilities
+        ContextProvider.init(this)
+
         initKoin()
 
         setContent {
