@@ -23,7 +23,8 @@ import com.skywatch.skywatch_app.presentation.views.*
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = koinInject(),
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onNavigateToConfigureAI: () -> Unit = {}
 ) {
     DisposableEffect(viewModel) {
         onDispose {
@@ -86,7 +87,7 @@ fun SettingsScreen(
                 SettingsOptionRow(
                     icon = Icons.Default.Settings,
                     title = "Configure AI",
-                    onClick = { /* TODO: Navigate to AI configuration */ }
+                    onClick = onNavigateToConfigureAI
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
