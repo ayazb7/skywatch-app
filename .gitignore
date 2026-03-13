@@ -1,6 +1,8 @@
 # Build outputs
 build/
 **/build/
+bin/
+obj/
 
 # Gradle
 .gradle/
@@ -8,19 +10,54 @@ local.properties
 
 # IDE
 .idea/
+.vscode/
 *.iml
+*.swp
+*.swo
 
 # iOS
 iosApp/Pods/
 *.xcworkspace
 *.xcuserdata
 xcuserdata/
+DerivedData/
 
 # Kotlin
 *.kotlin_module
 .kotlin/
 
+# Python (Backend)
+**/__pycache__/
+*.py[cod]
+*$py.class
+**/.venv/
+**/venv/
+ENV/
+env/
+.python-version
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Local Media / Storage (User Uploads)
+backend/app/static/uploads/faces/*
+!backend/app/static/uploads/faces/.gitkeep
+backend/app/static/uploads/events/*
+!backend/app/static/uploads/events/.gitkeep
+
+# DeepFace / Models
+.deepface/
+weights/
+
 # OS files
 .DS_Store
+Thumbs.db
 
-
+# Project Context
+context.txt
