@@ -19,13 +19,17 @@ async def receive_frame_json(payload: DoorbellFramePayload):
     result = await recognition_service.process_frame(image_bytes)
 
     return DoorbellEventResult(
-        event_id="latest",
+        event_id=result.event_id or "latest",
+        event_type=result.event_type,
         summary=result.event_summary or "Unknown",
         is_familiar=result.is_familiar,
+        is_threat=result.is_threat,
+        threat_confidence=result.threat_confidence,
+        threat_explanation=result.threat_explanation,
         matched_name=result.matched_name
     )
 
-@router.post("/upload")
+@router.post("/upload", response_model=DoorbellEventResult)
 async def receive_frame_multipart(file: UploadFile = File(...)):
     """
     Alternative endpoint to receive a doorbell frame via multipart upload, which might be faster for some cameras.
@@ -34,9 +38,13 @@ async def receive_frame_multipart(file: UploadFile = File(...)):
     result = await recognition_service.process_frame(image_bytes)
     
     return DoorbellEventResult(
-        event_id="latest",
+        event_id=result.event_id or "latest",
+        event_type=result.event_type,
         summary=result.event_summary or "Unknown",
         is_familiar=result.is_familiar,
+        is_threat=result.is_threat,
+        threat_confidence=result.threat_confidence,
+        threat_explanation=result.threat_explanation,
         matched_name=result.matched_name
     )
 

@@ -3,7 +3,7 @@ import os
 import uuid
 import aiofiles
 from app.models.face import RecognitionResult
-from app.models.event import EventCreate, EventType
+from app.models.event import EventCreate, EventType, ThreatLevel
 from app.services.deepface_service import deepface_service
 from app.database.repositories.face_repository import face_repository
 from app.database.repositories.event_repository import event_repository
@@ -57,16 +57,47 @@ class RecognitionService:
                     event_type = EventType.PERSON_DETECTED
                     break
 
+            # 3.1. Detect threats using Ollama only if no familiar face is detected
+            is_threat = False
+            threat_confidence = ThreatLevel.UNKNOWN
+            threat_explanation = None
+
+            if not is_familiar:
+                from app.services.threat_detection import threat_detection_service
+                is_threat, threat_confidence_str, threat_explanation = await threat_detection_service.detect_threat(temp_frame_path)
+                threat_confidence = ThreatLevel(threat_confidence_str)
+                
+                if is_threat:
+                    event_type = EventType.THREAT
+                    event_summary = "Threat detected at the door"
+                    logger.warning(f"Threat detected at the door! Confidence: {threat_confidence}")
+
             # 4. Log the event to the timeline
             event_create = EventCreate(
                 event_type=event_type,
                 summary=event_summary,
+                is_threat=is_threat,
+                threat_confidence=threat_confidence,
+                threat_explanation=threat_explanation,
+                matched_face_id=matched_face.id if matched_face else None,
+                screenshot_url=f"/static/uploads/events/{os.path.basename(temp_frame_path)}"
             )
+            
+            # Move temp file to permanent location
+            perm_event_path = f"app/static/uploads/events/{os.path.basename(temp_frame_path)}"
+            os.rename(temp_frame_path, perm_event_path)
+            temp_frame_path = perm_event_path
+
             created_event = await event_repository.create(event_create)
             logger.info(f"Created event history record {created_event.id}: {event_summary}")
 
             return RecognitionResult(
                 is_familiar=is_familiar,
+                event_id=str(created_event.id),
+                event_type=event_type,
+                is_threat=is_threat,
+                threat_confidence=threat_confidence,
+                threat_explanation=threat_explanation,
                 matched_face=matched_face,
                 matched_name=matched_face.name if matched_face else None,
                 confidence=confidence,

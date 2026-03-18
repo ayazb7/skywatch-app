@@ -19,6 +19,10 @@ async def lifespan(app: FastAPI):
     # Pre-load DeepFace models
     deepface_service.warmup()
     
+    # Pre-load/Verify Threat Detection models
+    from app.services.threat_detection import threat_detection_service
+    threat_detection_service.warmup()
+    
     # Startup
     try:
         await connection.init_db()

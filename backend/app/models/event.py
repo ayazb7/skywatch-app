@@ -10,12 +10,22 @@ class EventType(str, Enum):
     PACKAGE = "PACKAGE"
     OTHER = "OTHER"
 
+class ThreatLevel(str, Enum):
+    LOW = "Low"
+    MEDIUM = "Medium"
+    HIGH = "High"
+    UNKNOWN = "Unknown"
+
 class EventCreate(BaseModel):
     event_type: EventType
     summary: str
     conversation: Optional[str] = None
     video_url: Optional[str] = None
     screenshot_url: Optional[str] = None
+    is_threat: bool = False
+    threat_confidence: ThreatLevel = ThreatLevel.UNKNOWN
+    threat_explanation: Optional[str] = None
+    matched_face_id: Optional[int] = None
 
 class EventResponse(BaseModel):
     id: str
@@ -25,5 +35,9 @@ class EventResponse(BaseModel):
     conversation: Optional[str] = None
     video_url: Optional[str] = None
     screenshot_url: Optional[str] = None
+    is_threat: bool = False
+    threat_confidence: ThreatLevel = ThreatLevel.UNKNOWN
+    threat_explanation: Optional[str] = None
+    matched_face_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)

@@ -16,8 +16,15 @@ class FamiliarFaceResponse(BaseModel):
     
     model_config = ConfigDict(from_attributes=True)
 
+from app.models.event import ThreatLevel, EventType
+
 class RecognitionResult(BaseModel):
     is_familiar: bool
+    event_id: Optional[str] = None
+    event_type: EventType = EventType.OTHER
+    is_threat: bool = False
+    threat_confidence: ThreatLevel = ThreatLevel.UNKNOWN
+    threat_explanation: Optional[str] = None
     matched_face: Optional[FamiliarFaceResponse] = None
     matched_name: Optional[str] = None
     confidence: Optional[float] = None
