@@ -2,18 +2,20 @@ package com.skywatch.skywatch_app.domain.model
 
 /**
  * Represents a familiar face that the AI can recognize.
- * 
+ *
  * @property id Unique identifier for the familiar face
  * @property name Name of the person
  * @property category Category/group the person belongs to (e.g., "Family", "Friend", "Delivery")
- * @property imageData The face image stored as ByteArray
- * @property embedding Optional ML embedding for face recognition (placeholder for future backend integration)
+ * @property imageData The face image stored as ByteArray (used for local picks before upload)
+ * @property imageUrl URL of the image served by the backend (used after upload / when fetched)
+ * @property embedding Optional ML embedding for face recognition (placeholder for future use)
  */
 data class FamiliarFace(
     val id: String,
     val name: String,
     val category: String,
-    val imageData: ByteArray,
+    val imageData: ByteArray = ByteArray(0),
+    val imageUrl: String? = null,
     val embedding: List<Float>? = null
 ) {
     override fun equals(other: Any?): Boolean {
@@ -26,6 +28,7 @@ data class FamiliarFace(
         if (name != other.name) return false
         if (category != other.category) return false
         if (!imageData.contentEquals(other.imageData)) return false
+        if (imageUrl != other.imageUrl) return false
         if (embedding != other.embedding) return false
 
         return true
@@ -36,6 +39,7 @@ data class FamiliarFace(
         result = 31 * result + name.hashCode()
         result = 31 * result + category.hashCode()
         result = 31 * result + imageData.contentHashCode()
+        result = 31 * result + (imageUrl?.hashCode() ?: 0)
         result = 31 * result + (embedding?.hashCode() ?: 0)
         return result
     }
@@ -53,4 +57,3 @@ object FaceCategory {
     
     val all = listOf(FAMILY, FRIEND, DELIVERY, SERVICE, OTHER)
 }
-

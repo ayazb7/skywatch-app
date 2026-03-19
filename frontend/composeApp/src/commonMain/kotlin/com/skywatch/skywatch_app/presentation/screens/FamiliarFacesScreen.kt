@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.preat.peekaboo.image.picker.toImageBitmap
 import com.skywatch.skywatch_app.di.koinInject
 import com.skywatch.skywatch_app.domain.model.FamiliarFace
+import com.skywatch.skywatch_app.presentation.utils.rememberImageFromUrl
 import com.skywatch.skywatch_app.presentation.views.*
 import com.skywatch.skywatch_app.viewmodel.ConfigureAIViewModel
 
@@ -107,6 +108,16 @@ fun FamiliarFacesScreen(
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // Error banner
+                uiState.error?.let { error ->
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = RecordRed,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
                 
                 // Familiar faces list
                 if (uiState.isLoading) {
@@ -114,7 +125,7 @@ fun FamiliarFacesScreen(
                         modifier = Modifier.fillMaxWidth().weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = GradientBlue)
                     }
                 } else if (uiState.familiarFaces.isEmpty()) {
                     Box(
@@ -159,13 +170,18 @@ private fun FamiliarFaceItem(
     face: FamiliarFace,
     onDelete: () -> Unit
 ) {
-    val imageBitmap: ImageBitmap? = remember(face.imageData) {
-        try {
-            face.imageData.toImageBitmap()
-        } catch (e: Exception) {
-            null
-        }
+    // Try URL-based image first, then fall back to raw bytes
+    val urlBitmap = face.imageUrl?.let { rememberImageFromUrl(it) }
+    val localBitmap: ImageBitmap? = remember(face.imageData) {
+        if (face.imageData.isNotEmpty()) {
+            try {
+                face.imageData.toImageBitmap()
+            } catch (_: Exception) {
+                null
+            }
+        } else null
     }
+    val imageBitmap = urlBitmap ?: localBitmap
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -230,4 +246,3 @@ private fun FamiliarFaceItem(
         }
     }
 }
-

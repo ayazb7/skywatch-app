@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS event_history (
     id SERIAL PRIMARY KEY,
     description TEXT NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    type TEXT NOT NULL, -- We keep as TEXT for simplicity with asyncpg but logically it's the enum
+    type TEXT NOT NULL,
     conversation TEXT,
     video_url TEXT,
     screenshot_url TEXT,

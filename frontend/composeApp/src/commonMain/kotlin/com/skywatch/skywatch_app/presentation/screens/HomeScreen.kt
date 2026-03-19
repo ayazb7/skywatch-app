@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -91,10 +95,75 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Timeline Section
-                TimelineSection(events = uiState.timelineEvents)
+                // ── Content area: loading / error / timeline ──
+                when {
+                    uiState.isLoading -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = GradientBlue)
+                        }
+                    }
+
+                    uiState.error != null -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = uiState.error ?: "Something went wrong",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = RecordRed
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(
+                                onClick = { viewModel.refreshTimeline() },
+                                colors = ButtonDefaults.buttonColors(containerColor = GradientBlue)
+                            ) {
+                                Text("Retry")
+                            }
+                        }
+                    }
+
+                    uiState.timelineEvents.isEmpty() -> {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 64.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Inventory2,
+                                contentDescription = null,
+                                tint = TextGray.copy(alpha = 0.3f),
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No events recorded",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextGray
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Everything looks quiet for this day.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextGray.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+
+                    else -> {
+                        TimelineSection(events = uiState.timelineEvents)
+                    }
+                }
             }
         }
     }
 }
-

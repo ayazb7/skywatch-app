@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package com.skywatch.skywatch_app.domain.model
 
 import kotlinx.datetime.Instant
@@ -7,7 +8,10 @@ data class TimelineEvent @OptIn(ExperimentalTime::class) constructor(
     val id: String,
     val description: String,
     val timestamp: Instant?,
-    val type: EventType = EventType.MOTION
+    val type: EventType = EventType.MOTION,
+    val isThreat: Boolean = false,
+    val threatConfidence: String = "Unknown",
+    val threatExplanation: String? = null
 )
 
 enum class EventType {
@@ -17,4 +21,3 @@ enum class EventType {
     PACKAGE,
     OTHER
 }
-

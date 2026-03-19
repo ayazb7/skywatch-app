@@ -49,6 +49,8 @@ fun AddFamiliarFaceScreen(
     var showCamera by remember { mutableStateOf(false) }
     
     val scope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     
     // Image picker launcher
     val imagePickerLauncher = rememberImagePickerLauncher(
@@ -74,6 +76,13 @@ fun AddFamiliarFaceScreen(
     DisposableEffect(viewModel) {
         onDispose {
             viewModel.close()
+        }
+    }
+
+    // Show error as snackbar
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            snackbarHostState.showSnackbar(it)
         }
     }
     
@@ -171,24 +180,29 @@ fun AddFamiliarFaceScreen(
         }
     } else {
         // Main form view
-        AddFamiliarFaceFormContent(
-            selectedImageData = selectedImageData,
-            name = name,
-            onNameChange = { name = it },
-            selectedCategory = selectedCategory,
-            showCategoryDropdown = showCategoryDropdown,
-            onShowCategoryDropdownChange = { showCategoryDropdown = it },
-            onCategorySelected = { selectedCategory = it },
-            onNavigateBack = onNavigateBack,
-            onCameraClick = { showCamera = true },
-            onGalleryClick = { imagePickerLauncher.launch() },
-            onSave = {
-                selectedImageData?.let { imageData ->
-                    viewModel.addFamiliarFace(name, selectedCategory, imageData)
-                    onSaveSuccess()
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { _ ->
+            AddFamiliarFaceFormContent(
+                selectedImageData = selectedImageData,
+                name = name,
+                onNameChange = { name = it },
+                selectedCategory = selectedCategory,
+                showCategoryDropdown = showCategoryDropdown,
+                onShowCategoryDropdownChange = { showCategoryDropdown = it },
+                onCategorySelected = { selectedCategory = it },
+                onNavigateBack = onNavigateBack,
+                onCameraClick = { showCamera = true },
+                onGalleryClick = { imagePickerLauncher.launch() },
+                isSaving = uiState.isSaving,
+                onSave = {
+                    selectedImageData?.let { imageData ->
+                        viewModel.addFamiliarFace(name, selectedCategory, imageData)
+                        onSaveSuccess()
+                    }
                 }
-            }
-        )
+            )
+        }
     }
 }
 
@@ -205,6 +219,7 @@ private fun AddFamiliarFaceFormContent(
     onNavigateBack: () -> Unit,
     onCameraClick: () -> Unit,
     onGalleryClick: () -> Unit,
+    isSaving: Boolean,
     onSave: () -> Unit
 ) {
     val imageBitmap: ImageBitmap? = remember(selectedImageData) {
@@ -217,7 +232,7 @@ private fun AddFamiliarFaceFormContent(
         }
     }
 
-    val canSave = selectedImageData != null && name.isNotBlank()
+    val canSave = selectedImageData != null && name.isNotBlank() && !isSaving
 
     Box(
         modifier = Modifier
@@ -384,7 +399,7 @@ private fun AddFamiliarFaceFormContent(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Save button
+                // Save button with loading indicator
                 Button(
                     onClick = onSave,
                     modifier = Modifier.fillMaxWidth(),
@@ -393,10 +408,19 @@ private fun AddFamiliarFaceFormContent(
                         containerColor = GradientBlue
                     )
                 ) {
-                    Text("Save")
+                    if (isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = CardWhite,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Uploading…")
+                    } else {
+                        Text("Save")
+                    }
                 }
             }
         }
     }
 }
-

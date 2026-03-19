@@ -2,6 +2,7 @@ package com.skywatch.skywatch_app.viewmodel
 
 import com.skywatch.skywatch_app.domain.model.FamiliarFace
 import com.skywatch.skywatch_app.domain.repository.FamiliarFaceRepository
+import com.skywatch.skywatch_app.data.repository.FamiliarFaceRepositoryImpl
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,8 +13,10 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * ViewModel for the Configure AI screen.
- * Manages familiar faces list and add/delete operations.
+ * ViewModel for the Configure AI / Familiar Faces screens.
+ *
+ * Manages the faces list and add/delete operations via the repository,
+ * exposing a single immutable [ConfigureAIUiState] for the UI to observe.
  */
 class ConfigureAIViewModel(
     private val familiarFaceRepository: FamiliarFaceRepository,
@@ -25,6 +28,7 @@ class ConfigureAIViewModel(
     
     init {
         observeFamiliarFaces()
+        loadFaces()
     }
     
     private fun observeFamiliarFaces() {
@@ -37,20 +41,45 @@ class ConfigureAIViewModel(
             }
         }
     }
+
+    /** Trigger initial / manual refresh from the backend. */
+    fun loadFaces() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            try {
+                // FamiliarFaceRepositoryImpl exposes refresh()
+                (familiarFaceRepository as? FamiliarFaceRepositoryImpl)?.refresh()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Failed to load faces"
+                )
+            }
+        }
+    }
     
     /**
-     * Add a new familiar face with the provided details.
+     * Add a new familiar face — uploads the image bytes to the backend.
      */
     @OptIn(ExperimentalUuidApi::class)
     fun addFamiliarFace(name: String, category: String, imageData: ByteArray) {
         viewModelScope.launch {
-            val face = FamiliarFace(
-                id = Uuid.random().toString(),
-                name = name,
-                category = category,
-                imageData = imageData
-            )
-            familiarFaceRepository.addFamiliarFace(face)
+            _uiState.value = _uiState.value.copy(isSaving = true, error = null)
+            try {
+                val face = FamiliarFace(
+                    id = Uuid.random().toString(),
+                    name = name,
+                    category = category,
+                    imageData = imageData
+                )
+                familiarFaceRepository.addFamiliarFace(face)
+                _uiState.value = _uiState.value.copy(isSaving = false)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isSaving = false,
+                    error = e.message ?: "Failed to upload face"
+                )
+            }
         }
     }
     
@@ -59,7 +88,13 @@ class ConfigureAIViewModel(
      */
     fun deleteFamiliarFace(id: String) {
         viewModelScope.launch {
-            familiarFaceRepository.deleteFamiliarFace(id)
+            try {
+                familiarFaceRepository.deleteFamiliarFace(id)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = e.message ?: "Failed to delete face"
+                )
+            }
         }
     }
     
@@ -69,10 +104,11 @@ class ConfigureAIViewModel(
 }
 
 /**
- * UI state for the Configure AI screen.
+ * Immutable UI state for the Configure AI / Familiar Faces screens.
  */
 data class ConfigureAIUiState(
     val familiarFaces: List<FamiliarFace> = emptyList(),
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val isSaving: Boolean = false,
+    val error: String? = null
 )
-

@@ -1,5 +1,8 @@
 package com.skywatch.skywatch_app.di
 
+import com.skywatch.skywatch_app.data.network.ApiClient
+import com.skywatch.skywatch_app.data.network.api.EventsApi
+import com.skywatch.skywatch_app.data.network.api.FacesApi
 import com.skywatch.skywatch_app.data.repository.FamiliarFaceRepositoryImpl
 import com.skywatch.skywatch_app.data.repository.MediaRepositoryImpl
 import com.skywatch.skywatch_app.data.repository.TimelineRepositoryImpl
@@ -11,6 +14,7 @@ import com.skywatch.skywatch_app.domain.repository.VideoFeedRepository
 import com.skywatch.skywatch_app.viewmodel.ConfigureAIViewModel
 import com.skywatch.skywatch_app.viewmodel.HomeViewModel
 import com.skywatch.skywatch_app.viewmodel.SettingsViewModel
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +35,11 @@ val appModule = module {
         CoroutineScope(SupervisorJob() + dispatcher)
     }
 
+    // Networking
+    single<HttpClient> { ApiClient.create() }
+    single { EventsApi(get()) }
+    single { FacesApi(get()) }
+
     // Repositories
     singleOf(::TimelineRepositoryImpl) bind TimelineRepository::class
     singleOf(::MediaRepositoryImpl) bind MediaRepository::class
@@ -42,4 +51,3 @@ val appModule = module {
     factoryOf(::SettingsViewModel)
     factoryOf(::ConfigureAIViewModel)
 }
-

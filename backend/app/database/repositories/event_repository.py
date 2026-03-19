@@ -95,4 +95,37 @@ class EventRepository:
             )
             return result == "DELETE 1"
 
+    async def get_by_date(self, date_str: str, limit: int = 50, offset: int = 0) -> List[EventResponse]:
+        """Fetch events whose timestamp falls on the given date (YYYY-MM-DD)."""
+        from datetime import date
+        target_date = date.fromisoformat(date_str)
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            records = await conn.fetch(
+                """
+                SELECT id, type, description, conversation, video_url, screenshot_url, timestamp, is_threat, threat_confidence, threat_explanation, matched_face_id
+                FROM event_history
+                WHERE timestamp::date = $1
+                ORDER BY timestamp DESC
+                LIMIT $2 OFFSET $3
+                """,
+                target_date, limit, offset
+            )
+            return [
+                EventResponse(
+                    id=str(r["id"]),
+                    type=EventType(r["type"]),
+                    description=r["description"],
+                    timestamp=r["timestamp"],
+                    conversation=r["conversation"],
+                    video_url=r["video_url"],
+                    screenshot_url=r["screenshot_url"],
+                    is_threat=r["is_threat"],
+                    threat_confidence=ThreatLevel(r["threat_confidence"]),
+                    threat_explanation=r["threat_explanation"],
+                    matched_face_id=r["matched_face_id"]
+                )
+                for r in records
+            ]
+
 event_repository = EventRepository()
