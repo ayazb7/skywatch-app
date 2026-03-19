@@ -5,7 +5,7 @@ import traceback
 
 from app.config import settings
 from app.database import connection
-from app.routers import events, faces, doorbell
+from app.routers import events, faces, doorbell, demo
 from app.services.deepface_service import deepface_service
 from fastapi.staticfiles import StaticFiles
 import os
@@ -60,6 +60,7 @@ async def health_check():
 app.include_router(events.router)
 app.include_router(faces.router)
 app.include_router(doorbell.router)
+app.include_router(demo.router)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

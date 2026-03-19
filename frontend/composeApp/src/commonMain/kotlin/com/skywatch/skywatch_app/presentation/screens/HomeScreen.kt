@@ -14,7 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.skywatch.skywatch_app.di.koinInject
 import com.skywatch.skywatch_app.presentation.buttons.ControlButtonsRow
 import com.skywatch.skywatch_app.viewmodel.HomeViewModel
@@ -64,7 +66,9 @@ fun HomeScreen(
                 // Video Feed Card
                 VideoFeedCard(
                     isSoundOn = uiState.isSoundOn,
-                    onSoundToggle = { viewModel.toggleSound() }
+                    onSoundToggle = { viewModel.toggleSound() },
+                    isDemoMode = uiState.isDemoMode,
+                    latestDetection = uiState.latestDetection
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))

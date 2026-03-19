@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional, List
 from datetime import datetime
 from enum import Enum
@@ -11,10 +11,10 @@ class EventType(str, Enum):
     OTHER = "OTHER"
 
 class ThreatLevel(str, Enum):
-    LOW = "Low"
-    MEDIUM = "Medium"
-    HIGH = "High"
-    UNKNOWN = "Unknown"
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    UNKNOWN = "UNKNOWN"
 
 class EventCreate(BaseModel):
     event_type: EventType
@@ -41,3 +41,10 @@ class EventResponse(BaseModel):
     matched_face_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("threat_confidence", mode="before")
+    @classmethod
+    def validate_threat_level(cls, v):
+        if isinstance(v, str):
+            return v.upper()
+        return v

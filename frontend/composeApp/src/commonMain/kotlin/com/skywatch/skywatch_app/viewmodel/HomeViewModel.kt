@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -18,6 +20,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.Instant
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
@@ -35,11 +38,45 @@ class HomeViewModel(
     private var currentDate: LocalDate = Clock.System.now()
         .toLocalDateTime(TimeZone.currentSystemDefault()).date
     
+    private var pollingJob: kotlinx.coroutines.Job? = null
+    
     init {
-        _uiState.value = _uiState.value.copy(selectedDate = formatDateForDisplay(currentDate))
+        _uiState.value = _uiState.value.copy(
+            selectedDate = formatDateForDisplay(currentDate),
+            isDemoMode = true
+        )
         observeRepositories()
         loadEvents()
+        startLivePolling()
     }
+
+    private fun startLivePolling() {
+        pollingJob?.cancel()
+        pollingJob = viewModelScope.launch {
+            while (true) {
+                try {
+                    // Refresh current date events for the timeline
+                    timelineRepository.getEventsForDate(currentDate.toString())
+                    
+                    // Check for very recent events (last 10 seconds) for the HUD
+                    val latest = _uiState.value.timelineEvents.firstOrNull()
+                    if (latest != null) {
+                        val now = Clock.System.now().toEpochMilliseconds()
+                        val eventTime = latest.timestamp?.toEpochMilliseconds() ?: 0
+                        if (now - eventTime < 10000) { // 10 seconds threshold
+                            _uiState.value = _uiState.value.copy(latestDetection = latest)
+                        } else if (_uiState.value.latestDetection != null) {
+                            _uiState.value = _uiState.value.copy(latestDetection = null)
+                        }
+                    }
+                } catch (e: Exception) {
+                    // Silent fail for polling
+                }
+                kotlinx.coroutines.delay(3000) // Poll every 3 seconds
+            }
+        }
+    }
+
     
     private fun observeRepositories() {
         viewModelScope.launch {
@@ -158,5 +195,7 @@ data class HomeUiState(
     val isRecording: Boolean = false,
     val selectedDate: String = "",
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val isDemoMode: Boolean = false,
+    val latestDetection: TimelineEvent? = null
 )

@@ -44,4 +44,14 @@ class EventsApi(private val client: HttpClient) {
     suspend fun deleteEvent(id: String) {
         client.delete("/api/events/$id")
     }
+
+    /**
+     * Fetch the most recent events (for live HUD).
+     */
+    suspend fun getLatestEvents(limit: Int = 5): List<EventDto> {
+        return client.get("/api/events") {
+            parameter("limit", limit)
+            parameter("offset", 0)
+        }.body()
+    }
 }
