@@ -152,6 +152,14 @@ class HomeViewModel(
     fun selectDate(date: String) {
         _uiState.value = _uiState.value.copy(selectedDate = date)
     }
+
+    fun onEventClick(event: TimelineEvent) {
+        _uiState.value = _uiState.value.copy(selectedEvent = event)
+    }
+
+    fun dismissEventDetails() {
+        _uiState.value = _uiState.value.copy(selectedEvent = null)
+    }
     
     fun navigateToPreviousDate() {
         currentDate = currentDate.minus(1, DateTimeUnit.DAY)
@@ -197,5 +205,6 @@ data class HomeUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val isDemoMode: Boolean = false,
-    val latestDetection: TimelineEvent? = null
+    val latestDetection: TimelineEvent? = null,
+    val selectedEvent: TimelineEvent? = null
 )

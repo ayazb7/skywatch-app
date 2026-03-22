@@ -51,6 +51,7 @@ kotlin {
             implementation(libs.kotlinx.datetime)
             implementation(libs.peekaboo.ui)
             implementation(libs.peekaboo.image.picker)
+            implementation(libs.kamel.image)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)

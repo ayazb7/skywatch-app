@@ -23,7 +23,9 @@ data class EventDto(
     @SerialName("is_threat") val isThreat: Boolean = false,
     @SerialName("threat_confidence") val threatConfidence: String = "Unknown",
     @SerialName("threat_explanation") val threatExplanation: String? = null,
-    @SerialName("matched_face_id") val matchedFaceId: Int? = null
+    @SerialName("matched_face_id") val matchedFaceId: Int? = null,
+    @SerialName("matched_face_name") val matchedFaceName: String? = null,
+    @SerialName("matched_face_image_url") val matchedFaceImageUrl: String? = null
 )
 
 /**
@@ -50,6 +52,9 @@ fun EventDto.toDomain(): TimelineEvent {
         type = eventType,
         isThreat = isThreat,
         threatConfidence = threatConfidence,
-        threatExplanation = threatExplanation
+        threatExplanation = threatExplanation,
+        matchedFaceId = matchedFaceId,
+        matchedFaceName = matchedFaceName,
+        matchedFaceImageUrl = matchedFaceImageUrl
     )
 }

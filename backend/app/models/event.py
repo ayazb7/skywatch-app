@@ -39,6 +39,8 @@ class EventResponse(BaseModel):
     threat_confidence: ThreatLevel = ThreatLevel.UNKNOWN
     threat_explanation: Optional[str] = None
     matched_face_id: Optional[int] = None
+    matched_face_name: Optional[str] = None
+    matched_face_image_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
