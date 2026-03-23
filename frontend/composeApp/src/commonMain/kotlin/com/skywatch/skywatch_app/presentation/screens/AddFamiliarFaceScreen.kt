@@ -85,6 +85,14 @@ fun AddFamiliarFaceScreen(
             snackbarHostState.showSnackbar(it)
         }
     }
+
+    // Handle save success
+    LaunchedEffect(uiState.saveSuccess) {
+        if (uiState.saveSuccess) {
+            onSaveSuccess()
+            viewModel.clearSaveSuccess()
+        }
+    }
     
     if (showCamera) {
         // Full screen camera view
@@ -198,7 +206,6 @@ fun AddFamiliarFaceScreen(
                 onSave = {
                     selectedImageData?.let { imageData ->
                         viewModel.addFamiliarFace(name, selectedCategory, imageData)
-                        onSaveSuccess()
                     }
                 }
             )

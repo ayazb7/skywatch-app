@@ -8,6 +8,7 @@ import com.skywatch.skywatch_app.domain.repository.FamiliarFaceRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
 
 /**
  * API-backed implementation of [FamiliarFaceRepository].
@@ -30,13 +31,24 @@ class FamiliarFaceRepositoryImpl(
     }
 
     override suspend fun addFamiliarFace(face: FamiliarFace) {
-        facesApi.uploadFace(
-            name = face.name,
-            category = face.category,
-            imageBytes = face.imageData
-        )
-        // Re-fetch to keep local cache in sync with backend
-        refresh()
+        var lastException: Exception? = null
+        for (attempt in 1..3) {
+            try {
+                facesApi.uploadFace(
+                    name = face.name,
+                    category = face.category,
+                    imageBytes = face.imageData
+                )
+                // Re-fetch to keep local cache in sync with backend
+                refresh()
+                return
+            } catch (e: Exception) {
+                lastException = e
+                // Only delay if we have more attempts left
+                if (attempt < 3) kotlinx.coroutines.delay(500L * attempt)
+            }
+        }
+        throw lastException ?: Exception("Failed to upload face after 3 attempts")
     }
 
     override suspend fun deleteFamiliarFace(id: String) {

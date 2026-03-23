@@ -8,6 +8,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -34,26 +35,28 @@ class ConfigureAIViewModel(
     private fun observeFamiliarFaces() {
         viewModelScope.launch {
             familiarFaceRepository.getFamiliarFaces().collect { faces ->
-                _uiState.value = _uiState.value.copy(
-                    familiarFaces = faces,
-                    isLoading = false
-                )
+                _uiState.update {
+                    it.copy(
+                        familiarFaces = faces,
+                        isLoading = false
+                    )
+                }
             }
         }
     }
 
-    /** Trigger initial / manual refresh from the backend. */
     fun loadFaces() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 // FamiliarFaceRepositoryImpl exposes refresh()
                 (familiarFaceRepository as? FamiliarFaceRepositoryImpl)?.refresh()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = e.message ?: "Failed to load faces"
-                )
+                _uiState.update {
+                    it.copy(error = e.message ?: "Failed to load faces")
+                }
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
@@ -64,7 +67,7 @@ class ConfigureAIViewModel(
     @OptIn(ExperimentalUuidApi::class)
     fun addFamiliarFace(name: String, category: String, imageData: ByteArray) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSaving = true, error = null)
+            _uiState.update { it.copy(isSaving = true, error = null, saveSuccess = false) }
             try {
                 val face = FamiliarFace(
                     id = Uuid.random().toString(),
@@ -73,14 +76,22 @@ class ConfigureAIViewModel(
                     imageData = imageData
                 )
                 familiarFaceRepository.addFamiliarFace(face)
-                _uiState.value = _uiState.value.copy(isSaving = false)
+                _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isSaving = false,
-                    error = e.message ?: "Failed to upload face"
-                )
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        error = e.message ?: "Failed to upload face",
+                        saveSuccess = false
+                    )
+                }
             }
         }
+    }
+
+    /** Clear the success flag after it has been handled by the UI. */
+    fun clearSaveSuccess() {
+        _uiState.update { it.copy(saveSuccess = false) }
     }
     
     /**
@@ -91,9 +102,9 @@ class ConfigureAIViewModel(
             try {
                 familiarFaceRepository.deleteFamiliarFace(id)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    error = e.message ?: "Failed to delete face"
-                )
+                _uiState.update {
+                    it.copy(error = e.message ?: "Failed to delete face")
+                }
             }
         }
     }
@@ -110,5 +121,6 @@ data class ConfigureAIUiState(
     val familiarFaces: List<FamiliarFace> = emptyList(),
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
+    val saveSuccess: Boolean = false,
     val error: String? = null
 )

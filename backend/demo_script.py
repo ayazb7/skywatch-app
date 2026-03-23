@@ -98,6 +98,16 @@ def clean_events():
         print(f"  Cleared {len(events)} existing events for {today}")
 
 
+def clean_faces():
+    """Delete all familiar faces."""
+    r = requests.get(f"{BASE_URL}/api/faces")
+    if r.status_code == 200:
+        faces = r.json()
+        for face in faces:
+            requests.delete(f"{BASE_URL}/api/faces/{face['id']}")
+        print(f"  Cleared {len(faces)} existing familiar faces")
+
+
 def step_1_familiar_face_recognition():
     """Send a photo to the doorbell endpoint to trigger face recognition."""
     image_path = os.path.join(DEMO_IMAGES_DIR, "doorbell_familiar.jpg")
@@ -220,9 +230,10 @@ def main():
     # Clean slate
     print(f"\n{BOLD}Preparing clean slate...{RESET}")
     clean_events()
-    print(f"  {YELLOW}Note: Familiar faces are NOT cleared so you can add them manually in the app.{RESET}")
+    clean_faces() # Restored as requested
     
-    pause("\n🎬 Ready to start the demo! Press Enter when you are ready...")
+    print(f"\n{YELLOW}🎬 PROMPT: Open the app and manually add a Familiar Face first.{RESET}")
+    pause("Once the face is added in the app, press Enter to begin the automated recognition steps...")
     
     # ─── Step 1: Familiar Face Recognition ────────────────────────
     banner("Step 1: Familiar Face Recognition (DeepFace)", BLUE)
