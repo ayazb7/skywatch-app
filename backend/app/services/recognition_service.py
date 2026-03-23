@@ -19,6 +19,7 @@ class RecognitionService:
         3. Iterate through each familiar face and call DeepFace.verify.
         4. If a match is found, log PERSON_DETECTED event.
         5. If no match, log MOTION event.
+        6. Move temp file to permanent location with clean naming.
         """
         temp_frame_path = f"app/static/uploads/events/temp_{uuid.uuid4()}.jpg"
         
@@ -28,7 +29,7 @@ class RecognitionService:
                 await f.write(image_bytes)
 
             # 2. Fetch all familiar faces
-            familiar_faces = await face_repository.get_all(limit=100) # Get all saved faces
+            familiar_faces = await face_repository.get_all(limit=100)
             
             is_familiar = False
             matched_face = None
@@ -65,14 +66,26 @@ class RecognitionService:
             if not is_familiar:
                 from app.services.threat_detection import threat_detection_service
                 is_threat, threat_confidence_str, threat_explanation = await threat_detection_service.detect_threat(temp_frame_path)
-                threat_confidence = ThreatLevel(threat_confidence_str)
+                try:
+                    threat_confidence = ThreatLevel(threat_confidence_str.upper())
+                except ValueError:
+                    threat_confidence = ThreatLevel.UNKNOWN
                 
                 if is_threat:
                     event_type = EventType.THREAT
                     event_summary = "Threat detected at the door"
                     logger.warning(f"Threat detected at the door! Confidence: {threat_confidence}")
 
-            # 4. Log the event to the timeline
+            # 4. Handle file persistence BEFORE creating database record
+            # Use a clean persistent filename (stripping temp_ prefix)
+            perm_filename = os.path.basename(temp_frame_path).replace("temp_", "capture_")
+            perm_event_path = f"app/static/uploads/events/{perm_filename}"
+            
+            # Save the file permanently
+            os.rename(temp_frame_path, perm_event_path)
+            temp_frame_path = perm_event_path # Point cleanup to new path
+            
+            # 5. Log the event to the timeline using the persistent path
             event_create = EventCreate(
                 event_type=event_type,
                 summary=event_summary,
@@ -80,14 +93,9 @@ class RecognitionService:
                 threat_confidence=threat_confidence,
                 threat_explanation=threat_explanation,
                 matched_face_id=matched_face.id if matched_face else None,
-                screenshot_url=f"/static/uploads/events/{os.path.basename(temp_frame_path)}"
+                screenshot_url=f"/static/uploads/events/{perm_filename}"
             )
             
-            # Move temp file to permanent location
-            perm_event_path = f"app/static/uploads/events/{os.path.basename(temp_frame_path)}"
-            os.rename(temp_frame_path, perm_event_path)
-            temp_frame_path = perm_event_path
-
             created_event = await event_repository.create(event_create)
             logger.info(f"Created event history record {created_event.id}: {event_summary}")
 
@@ -112,8 +120,11 @@ class RecognitionService:
                 event_summary="Error processing doorbell frame"
             )
         finally:
-            # Clean up temp frame
-            if os.path.exists(temp_frame_path):
-                os.remove(temp_frame_path)
+            # ONLY delete if it's still a temporary file (meaning it was NEVER moved/saved)
+            if "temp_" in os.path.basename(temp_frame_path) and os.path.exists(temp_frame_path):
+                try:
+                    os.remove(temp_frame_path)
+                except:
+                    pass
 
 recognition_service = RecognitionService()

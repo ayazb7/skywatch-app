@@ -53,6 +53,7 @@ fun EventDto.toDomain(): TimelineEvent {
         isThreat = isThreat,
         threatConfidence = threatConfidence,
         threatExplanation = threatExplanation,
+        screenshotUrl = screenshotUrl,
         matchedFaceId = matchedFaceId,
         matchedFaceName = matchedFaceName,
         matchedFaceImageUrl = matchedFaceImageUrl

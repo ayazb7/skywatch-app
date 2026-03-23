@@ -12,6 +12,7 @@ data class TimelineEvent @OptIn(ExperimentalTime::class) constructor(
     val isThreat: Boolean = false,
     val threatConfidence: String = "Unknown",
     val threatExplanation: String? = null,
+    val screenshotUrl: String? = null,
     val matchedFaceId: Int? = null,
     val matchedFaceName: String? = null,
     val matchedFaceImageUrl: String? = null

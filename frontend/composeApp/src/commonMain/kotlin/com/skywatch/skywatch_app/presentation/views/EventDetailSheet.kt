@@ -2,7 +2,6 @@ package com.skywatch.skywatch_app.presentation.views
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,8 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.skywatch.skywatch_app.domain.model.EventType
 import com.skywatch.skywatch_app.domain.model.TimelineEvent
 import com.skywatch.skywatch_app.presentation.utils.formatTimestamp
-import io.kamel.image.KamelImage
-import io.kamel.image.asyncPainterResource
+import com.skywatch.skywatch_app.presentation.utils.rememberImageFromUrl
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class, ExperimentalMaterial3Api::class)
@@ -36,7 +34,7 @@ fun EventDetailSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(24.dp)
+            .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
         // Header
         Row(
@@ -50,6 +48,7 @@ fun EventDetailSheet(
                         EventType.PERSON_DETECTED -> "Person Identified"
                         EventType.THREAT -> "Threat Alert"
                         EventType.PACKAGE -> "Package Delivery"
+                        EventType.MOTION -> "Motion Detected"
                         else -> "Activity Detail"
                     },
                     fontSize = 20.sp,
@@ -70,7 +69,12 @@ fun EventDetailSheet(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Doorbell screenshot image (for all event types)
+        if (!event.screenshotUrl.isNullOrBlank()) {
+            EventScreenshotSection(event.screenshotUrl)
+        }
 
         // Content based on type
         when (event.type) {
@@ -112,14 +116,44 @@ fun EventDetailSheet(
 }
 
 @Composable
-private fun PersonDetailSection(event: TimelineEvent) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+private fun EventScreenshotSection(screenshotUrl: String) {
+    val imageUrl = if (screenshotUrl.startsWith("http")) {
+        screenshotUrl
+    } else {
+        "http://10.0.2.2:8000$screenshotUrl"
+    }
+
+    val bitmap = rememberImageFromUrl(imageUrl)
+
+    // Only render the container if we have a bitmap, avoiding "empty grey boxes"
+    if (bitmap != null) {
         Box(
             modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(12.dp))
                 .background(LightGrayBackground)
-                .border(2.dp, BorderGray, CircleShape),
+        ) {
+            Image(
+                bitmap = bitmap,
+                contentDescription = "Doorbell capture",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+    }
+}
+
+@Composable
+private fun PersonDetailSection(event: TimelineEvent) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        // Face image — match style of Settings screen (FamiliarFacesScreen)
+        Box(
+            modifier = Modifier
+                .size(100.dp) // Slightly larger for detail view, but same clean style
+                .clip(CircleShape)
+                .background(BorderGray),
             contentAlignment = Alignment.Center
         ) {
             if (!event.matchedFaceImageUrl.isNullOrBlank()) {
@@ -129,14 +163,23 @@ private fun PersonDetailSection(event: TimelineEvent) {
                     "http://10.0.2.2:8000${event.matchedFaceImageUrl}"
                 }
                 
-                KamelImage(
-                    resource = asyncPainterResource(imageUrl),
-                    contentDescription = event.matchedFaceName,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+                val bitmap = rememberImageFromUrl(imageUrl)
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap,
+                        contentDescription = event.matchedFaceName,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = GradientBlue,
+                        strokeWidth = 2.dp
+                    )
+                }
             } else {
-                Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(60.dp), tint = TextGray)
+                Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(50.dp), tint = TextGray)
             }
         }
         
@@ -144,7 +187,7 @@ private fun PersonDetailSection(event: TimelineEvent) {
         
         Text(
             text = event.matchedFaceName ?: "Unrecognized Person",
-            fontSize = 18.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = TextBlack
         )
@@ -164,9 +207,9 @@ private fun PersonDetailSection(event: TimelineEvent) {
             Padding(16.dp) {
                 Text(
                     text = event.description,
-                    fontSize = 14.sp,
+                    fontSize = 15.sp,
                     color = TextBlack,
-                    lineHeight = 20.sp
+                    lineHeight = 22.sp
                 )
             }
         }
@@ -203,16 +246,6 @@ private fun ThreatDetailSection(event: TimelineEvent) {
             color = TextBlack,
             lineHeight = 22.sp
         )
-        
-        if (!event.description.contains("Threat")) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Context: ${event.description}",
-                fontSize = 13.sp,
-                color = TextGray,
-                lineHeight = 18.sp
-            )
-        }
     }
 }
 
@@ -225,12 +258,6 @@ private fun DefaultDetailSection(event: TimelineEvent) {
             color = TextBlack,
             lineHeight = 22.sp
         )
-        
-        if (!event.threatExplanation.isNullOrBlank()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Additional Info", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            Text(text = event.threatExplanation, fontSize = 14.sp, color = TextGray)
-        }
     }
 }
 

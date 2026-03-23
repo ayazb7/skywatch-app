@@ -63,7 +63,7 @@ class HomeViewModel(
                     if (latest != null) {
                         val now = Clock.System.now().toEpochMilliseconds()
                         val eventTime = latest.timestamp?.toEpochMilliseconds() ?: 0
-                        if (now - eventTime < 10000) { // 10 seconds threshold
+                        if (now - eventTime < 60000) { // 60 seconds threshold for demo
                             _uiState.value = _uiState.value.copy(latestDetection = latest)
                         } else if (_uiState.value.latestDetection != null) {
                             _uiState.value = _uiState.value.copy(latestDetection = null)

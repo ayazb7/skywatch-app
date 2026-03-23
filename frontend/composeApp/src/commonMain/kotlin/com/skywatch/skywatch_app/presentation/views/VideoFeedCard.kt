@@ -1,6 +1,7 @@
 package com.skywatch.skywatch_app.presentation.views
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.MotionPhotosOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.Warning
@@ -20,10 +23,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.skywatch.skywatch_app.domain.model.EventType
 import com.skywatch.skywatch_app.domain.model.TimelineEvent
+import com.skywatch.skywatch_app.presentation.utils.rememberImageFromUrl
 
 @Composable
 fun VideoFeedCard(
@@ -42,6 +48,14 @@ fun VideoFeedCard(
         )
     )
 
+    // Build the full image URL from the screenshot path
+    val screenshotUrl = latestDetection?.screenshotUrl?.let { path ->
+        if (path.startsWith("http")) path
+        else "http://10.0.2.2:8000$path"
+    }
+    
+    val imageBitmap = screenshotUrl?.let { rememberImageFromUrl(it) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -50,7 +64,17 @@ fun VideoFeedCard(
             .background(Color(0xFF0F0F0F))
             .shadow(4.dp, RoundedCornerShape(16.dp))
     ) {
-        // Scanning Effect (Always on)
+        // Doorbell screenshot image (when available)
+        if (imageBitmap != null) {
+            Image(
+                bitmap = imageBitmap,
+                contentDescription = "Doorbell feed",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        // Scanning Effect overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -58,24 +82,26 @@ fun VideoFeedCard(
                     Brush.verticalGradient(
                         listOf(
                             Color.Transparent,
-                            GradientBlue.copy(alpha = scanAlpha),
+                            GradientBlue.copy(alpha = scanAlpha * 0.5f),
                             Color.Transparent
                         )
                     )
                 )
         )
 
-        // Placeholder content
-        Column(
-            modifier = Modifier.align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = Icons.Default.Videocam,
-                contentDescription = "Video Feed",
-                tint = Color.White.copy(alpha = 0.15f),
-                modifier = Modifier.size(48.dp)
-            )
+        // Placeholder content (only when no image)
+        if (imageBitmap == null) {
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Videocam,
+                    contentDescription = "Video Feed",
+                    tint = Color.White.copy(alpha = 0.15f),
+                    modifier = Modifier.size(48.dp)
+                )
+            }
         }
 
         // TOP BAR: Camera info & LIVE dot
@@ -107,10 +133,30 @@ fun VideoFeedCard(
             )
         }
 
-        // Floating Detection Banner
+        // Floating Detection Banner (supporting all event types)
         latestDetection?.let { detection ->
-            val bannerColor = if (detection.isThreat) RecordRed else GradientBlue
+            val bannerColor = when (detection.type) {
+                EventType.THREAT -> RecordRed
+                EventType.PACKAGE -> Color(0xFFF39C12) // Orange for package
+                EventType.PERSON_DETECTED -> GradientBlue
+                else -> Color(0xFF27AE60) // Green for motion
+            }
             
+            val bannerText = when (detection.type) {
+                EventType.THREAT -> "THREAT ALERT"
+                EventType.PERSON_DETECTED -> "PERSON DETECTED"
+                EventType.PACKAGE -> "PACKAGE DETECTED"
+                EventType.MOTION -> "MOTION DETECTED"
+                else -> "DETECTION ALERT"
+            }
+
+            val bannerIcon = when (detection.type) {
+                EventType.THREAT -> Icons.Default.Warning
+                EventType.PERSON_DETECTED -> Icons.Default.Person
+                EventType.PACKAGE -> Icons.Default.Inventory
+                else -> Icons.Default.MotionPhotosOn
+            }
+
             Box(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -121,14 +167,14 @@ fun VideoFeedCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = if (detection.isThreat) Icons.Default.Warning else Icons.Default.Person,
+                        imageVector = bannerIcon,
                         contentDescription = null,
                         tint = Color.White,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (detection.isThreat) "THREAT ALERT" else "PERSON DETECTED",
+                        text = bannerText,
                         color = Color.White,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold
